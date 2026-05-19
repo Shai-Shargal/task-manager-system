@@ -53,3 +53,51 @@ BEGIN
     END CATCH
 END;
 GO
+
+/* ============================================================================
+   usp_GetEmployeeTaskSummary
+   Returns each employee with task counts by status and nearest open due date.
+   Used by: GET /employees (Express API / React dashboard)
+============================================================================ */
+CREATE OR ALTER PROCEDURE dbo.usp_GetEmployeeTaskSummary
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    BEGIN TRY
+        SELECT
+            e.employee_id,
+            e.full_name AS employee_full_name,
+            d.department_name,
+            COUNT(t.task_id) AS total_tasks,
+            SUM(CASE WHEN t.status = N'Pending' THEN 1 ELSE 0 END) AS pending_tasks,
+            SUM(CASE WHEN t.status = N'In Progress' THEN 1 ELSE 0 END) AS in_progress_tasks,
+            SUM(CASE WHEN t.status = N'Done' THEN 1 ELSE 0 END) AS done_tasks,
+            MIN(
+                CASE
+                    WHEN t.status <> N'Done'
+                     AND t.due_date >= GETDATE()
+                    THEN t.due_date
+                END
+            ) AS nearest_upcoming_due_date
+        FROM dbo.employees AS e
+        INNER JOIN dbo.departments AS d
+            ON d.department_id = e.department_id
+        LEFT JOIN dbo.tasks AS t
+            ON t.assigned_to = e.employee_id
+        GROUP BY
+            e.employee_id,
+            e.full_name,
+            d.department_name
+        ORDER BY
+            e.full_name;
+    END TRY
+    BEGIN CATCH
+        DECLARE @ErrorMessage NVARCHAR(4000) = ERROR_MESSAGE();
+        DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+        DECLARE @ErrorState INT = ERROR_STATE();
+
+        RAISERROR(@ErrorMessage, @ErrorSeverity, @ErrorState);
+    END CATCH
+END;
+GO
