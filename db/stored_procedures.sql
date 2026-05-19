@@ -101,3 +101,44 @@ BEGIN
     END CATCH
 END;
 GO
+
+/* ============================================================================
+   usp_GetOverdueTasks
+   Returns open tasks whose due date has passed.
+   Overdue definition: due_date < GETDATE() AND status <> 'Done'
+============================================================================ */
+CREATE OR ALTER PROCEDURE dbo.usp_GetOverdueTasks
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    BEGIN TRY
+        SELECT
+            t.task_id,
+            t.title,
+            t.description,
+            t.status,
+            t.due_date,
+            t.created_at,
+            e.full_name     AS employee_full_name,
+            d.department_name
+        FROM dbo.tasks AS t
+        INNER JOIN dbo.employees AS e
+            ON e.employee_id = t.assigned_to
+        INNER JOIN dbo.departments AS d
+            ON d.department_id = e.department_id
+        WHERE
+            t.due_date < GETDATE()
+            AND t.status <> N'Done'
+        ORDER BY
+            t.due_date ASC;
+    END TRY
+    BEGIN CATCH
+        DECLARE @ErrorMessage NVARCHAR(4000) = ERROR_MESSAGE();
+        DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+        DECLARE @ErrorState INT = ERROR_STATE();
+
+        RAISERROR(@ErrorMessage, @ErrorSeverity, @ErrorState);
+    END CATCH
+END;
+GO
