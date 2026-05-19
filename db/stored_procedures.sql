@@ -248,3 +248,79 @@ BEGIN
     END CATCH
 END;
 GO
+
+/* ============================================================================
+   usp_AssignTask
+   Reassigns an open task to another employee inside a transaction.
+============================================================================ */
+CREATE OR ALTER PROCEDURE dbo.usp_AssignTask
+    @TaskID     INT,
+    @EmployeeID INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    DECLARE @TaskStatus VARCHAR(20);
+
+    BEGIN TRY
+        /* Validate task exists and is eligible for reassignment */
+        SELECT @TaskStatus = t.status
+        FROM dbo.tasks AS t
+        WHERE t.task_id = @TaskID;
+
+        IF @TaskStatus IS NULL
+        BEGIN
+            RAISERROR(N'Task not found. No task exists for the provided TaskID.', 16, 1);
+            RETURN;
+        END;
+
+        IF @TaskStatus = N'Done'
+        BEGIN
+            RAISERROR(
+                N'Cannot reassign a completed task. Only Pending or In Progress tasks can be assigned.',
+                16,
+                1
+            );
+            RETURN;
+        END;
+
+        /* Validate target employee exists */
+        IF NOT EXISTS (
+            SELECT 1
+            FROM dbo.employees AS e
+            WHERE e.employee_id = @EmployeeID
+        )
+        BEGIN
+            RAISERROR(
+                N'Employee not found. No employee exists for the provided EmployeeID.',
+                16,
+                1
+            );
+            RETURN;
+        END;
+
+        BEGIN TRANSACTION;
+
+        UPDATE dbo.tasks
+        SET assigned_to = @EmployeeID
+        WHERE task_id = @TaskID;
+
+        COMMIT TRANSACTION;
+
+        SELECT
+            N'Task assigned successfully.' AS message,
+            @TaskID     AS task_id,
+            @EmployeeID AS assigned_employee_id;
+    END TRY
+    BEGIN CATCH
+        IF @@TRANCOUNT > 0
+            ROLLBACK TRANSACTION;
+
+        DECLARE @ErrorMessage NVARCHAR(4000) = ERROR_MESSAGE();
+        DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+        DECLARE @ErrorState INT = ERROR_STATE();
+
+        RAISERROR(@ErrorMessage, @ErrorSeverity, @ErrorState);
+    END CATCH
+END;
+GO
