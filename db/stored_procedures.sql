@@ -142,3 +142,109 @@ BEGIN
     END CATCH
 END;
 GO
+
+/* ============================================================================
+   usp_UpdateTaskStatus
+   Updates a task status with forward-only transition rules.
+   Used by: PATCH /tasks/:id/status (Express API)
+
+   Allowed transitions:
+     Pending     -> In Progress
+     In Progress -> Done
+
+   Disallowed:
+     Pending     -> Done
+     In Progress -> Pending
+     Done        -> any status
+============================================================================ */
+CREATE OR ALTER PROCEDURE dbo.usp_UpdateTaskStatus
+    @TaskID    INT,
+    @NewStatus VARCHAR(20)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    DECLARE @CurrentStatus VARCHAR(20);
+
+    BEGIN TRY
+        /* Validate requested status value */
+        IF @NewStatus NOT IN (N'Pending', N'In Progress', N'Done')
+        BEGIN
+            RAISERROR(
+                N'Invalid status value. Allowed values are: Pending, In Progress, Done.',
+                16,
+                1
+            );
+            RETURN;
+        END;
+
+        /* Load current status and confirm task exists */
+        SELECT @CurrentStatus = t.status
+        FROM dbo.tasks AS t
+        WHERE t.task_id = @TaskID;
+
+        IF @CurrentStatus IS NULL
+        BEGIN
+            RAISERROR(N'Task not found. No task exists for the provided TaskID.', 16, 1);
+            RETURN;
+        END;
+
+        /* No-op when status is unchanged */
+        IF @CurrentStatus = @NewStatus
+        BEGIN
+            SELECT
+                N'Task status is already set to the requested value.' AS message,
+                @TaskID    AS task_id,
+                @NewStatus AS status;
+            RETURN;
+        END;
+
+        /* Enforce forward-only workflow */
+        IF @CurrentStatus = N'Done'
+        BEGIN
+            RAISERROR(
+                N'Invalid status transition. Completed tasks cannot be changed.',
+                16,
+                1
+            );
+            RETURN;
+        END;
+
+        IF @CurrentStatus = N'Pending' AND @NewStatus <> N'In Progress'
+        BEGIN
+            RAISERROR(
+                N'Invalid status transition. Pending can only move to In Progress.',
+                16,
+                1
+            );
+            RETURN;
+        END;
+
+        IF @CurrentStatus = N'In Progress' AND @NewStatus <> N'Done'
+        BEGIN
+            RAISERROR(
+                N'Invalid status transition. In Progress can only move to Done.',
+                16,
+                1
+            );
+            RETURN;
+        END;
+
+        UPDATE dbo.tasks
+        SET status = @NewStatus
+        WHERE task_id = @TaskID;
+
+        SELECT
+            N'Task status updated successfully.' AS message,
+            @TaskID    AS task_id,
+            @NewStatus AS status;
+    END TRY
+    BEGIN CATCH
+        DECLARE @ErrorMessage NVARCHAR(4000) = ERROR_MESSAGE();
+        DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+        DECLARE @ErrorState INT = ERROR_STATE();
+
+        RAISERROR(@ErrorMessage, @ErrorSeverity, @ErrorState);
+    END CATCH
+END;
+GO
