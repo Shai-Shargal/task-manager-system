@@ -18,7 +18,7 @@ The database layer is the core of the application, and all backend communication
 
 # ERD
 
-![ERD](./images/erd-diagram.png)
+![ERD](./images/erd.png)
 
 ---
 
