@@ -375,7 +375,7 @@ Pending → In Progress → Done
 
 ### Employee summary
 
-Employee workload metrics and customizable color themes (Confirm to save).
+Employee workload metrics and customizable color themes.
 
 ![Employee summary](docs/images/employee-summary.png)
 
