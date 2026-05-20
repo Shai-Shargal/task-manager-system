@@ -1,6 +1,6 @@
 # Employee Task Manager — Frontend
 
-Vite + React application for viewing employee task summaries.
+Vite + React dashboard for employee task summaries and interactive task status updates.
 
 ## Stack
 
@@ -19,7 +19,8 @@ frontend/
 │   ├── App.jsx
 │   ├── index.css
 │   ├── components/
-│   │   └── EmployeeTable.jsx
+│   │   ├── EmployeeTable.jsx
+│   │   └── TasksTable.jsx
 │   └── services/
 │       └── api.js
 ```
@@ -59,3 +60,7 @@ Override with `VITE_API_BASE_URL` in `frontend/.env` (see `.env.example`). Match
 ## API data shape
 
 Each employee row: `employee_full_name`, `department_name`, `total_tasks`, `pending_tasks`, `in_progress_tasks`, `done_tasks`, `nearest_upcoming_due_date`.
+
+Each task row (`GET /tasks`): `task_id`, `title`, `status`, `due_date`, `employee_full_name`, `department_name`.
+
+Status updates use `PATCH /tasks/:id/status` with body `{ "status": "Pending" | "In Progress" | "Done" }`. Forward-only transitions: Pending → In Progress → Done. Invalid transitions return `{ message: "Invalid status transition. ..." }` (shown inline in the tasks table).

@@ -1,4 +1,5 @@
 import EmployeeTable from './components/EmployeeTable.jsx';
+import TasksTable from './components/TasksTable.jsx';
 
 export default function App() {
   return (
@@ -6,11 +7,18 @@ export default function App() {
       <header className="app-header">
         <h1>Employee Task Manager</h1>
         <p className="subtitle">
-          Employee task summaries by department and status
+          Employee summaries and interactive task management
         </p>
       </header>
-      <main>
-        <EmployeeTable />
+      <main className="dashboard">
+        <section className="dashboard-section">
+          <h2 className="section-title">Employee Summary</h2>
+          <EmployeeTable />
+        </section>
+        <section className="dashboard-section">
+          <h2 className="section-title">Tasks</h2>
+          <TasksTable />
+        </section>
       </main>
     </div>
   );

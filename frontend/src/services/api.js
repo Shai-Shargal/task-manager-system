@@ -23,3 +23,37 @@ export async function getEmployees() {
     throw new Error(message);
   }
 }
+
+/**
+ * Fetches all tasks with employee and department details.
+ * @returns {Promise<Array>} Task rows from GET /tasks
+ */
+export async function getTasks() {
+  try {
+    const response = await api.get('/tasks');
+    return response.data;
+  } catch (error) {
+    const message =
+      error.response?.data?.message || error.message || 'Failed to fetch tasks';
+    console.error('getTasks error:', message);
+    throw new Error(message);
+  }
+}
+
+/**
+ * Updates a task status via PATCH /tasks/:id/status.
+ * @param {number} taskId
+ * @param {string} status - Pending | In Progress | Done
+ * @returns {Promise<{ message: string, task_id: number, status: string }>}
+ */
+export async function updateTaskStatus(taskId, status) {
+  try {
+    const response = await api.patch(`/tasks/${taskId}/status`, { status });
+    return response.data;
+  } catch (error) {
+    const message =
+      error.response?.data?.message || error.message || 'Failed to update task status';
+    console.error('updateTaskStatus error:', message);
+    throw new Error(message);
+  }
+}

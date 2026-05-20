@@ -35,3 +35,41 @@ body {
   font-size: 1rem;
   color: #555;
 }
+
+.dashboard-section {
+  margin-bottom: 2.5rem;
+}
+
+.dashboard-section:last-child {
+  margin-bottom: 0;
+}
+
+.section-title {
+  margin: 0 0 1rem;
+  font-size: 1.25rem;
+  font-weight: 600;
+  text-align: left;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 0.2rem 0.6rem;
+  border-radius: 9999px;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.status-error {
+  margin: 0.35rem 0 0;
+  font-size: 0.875rem;
+  color: #b91c1c;
+}
+
+.dashboard-alert {
+  margin: 0;
+  padding: 0.75rem 1rem;
+  background-color: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 6px;
+  color: #b91c1c;
+}
