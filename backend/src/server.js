@@ -3,7 +3,8 @@
  */
 
 const app = require('./app');
-const PORT = process.env.PORT || 5000;
+/* Default 5001: macOS AirPlay Receiver often binds port 5000 */
+const PORT = process.env.PORT || 5001;
 
 app.listen(PORT, () => {
   console.log(`Employee Task Manager API listening on port ${PORT}`);

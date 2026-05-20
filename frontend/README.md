@@ -52,9 +52,9 @@ Open the URL shown in the terminal (usually http://localhost:5173).
 
 ## API configuration
 
-[src/services/api.js](src/services/api.js) uses `baseURL: http://localhost:5000`.
+[src/services/api.js](src/services/api.js) calls the API at `http://localhost:5001` by default (port 5001 avoids macOS AirPlay on 5000).
 
-If port 5000 is blocked on macOS (AirPlay Receiver), set `PORT=5001` in `backend/.env` and update `baseURL` to `http://localhost:5001`.
+Override with `VITE_API_BASE_URL` in `frontend/.env` (see `.env.example`). Match `PORT` in `backend/.env` if you change the backend port.
 
 ## API data shape
 
