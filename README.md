@@ -75,7 +75,9 @@ Task_Manager_System/
 │   ├── database-design.md
 │   ├── project-plan.md
 │   └── images/
-│       └── erd.png
+│       ├── employee-summary.png
+│       ├── create-task.png
+│       └── task-display.png
 └── README.md
 ```
 
@@ -371,13 +373,23 @@ Pending → In Progress → Done
 
 ## Screenshots
 
-_Add screenshots here before submission._
+### Employee summary
 
-| View | Placeholder |
-|------|-------------|
-| Dashboard | `docs/images/screenshot-dashboard.png` |
-| Employee summary | `docs/images/screenshot-employees.png` |
-| Tasks table | `docs/images/screenshot-tasks.png` |
+Employee workload metrics and customizable color themes (Confirm to save).
+
+![Employee summary](docs/images/employee-summary.png)
+
+### Create task
+
+New tasks are assigned to an employee with a due date and start as **Pending**.
+
+![Create task](docs/images/create-task.png)
+
+### Tasks dashboard
+
+Task list with employee color legend, status workflow, edit, and delete.
+
+![Tasks dashboard](docs/images/task-display.png)
 
 ---
 
