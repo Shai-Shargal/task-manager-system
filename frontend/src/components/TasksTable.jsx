@@ -1,9 +1,10 @@
 /**
- * TasksTable — interactive task list with status updates.
+ * TasksTable — interactive task list with status updates, edit, and delete.
  */
 
 import { useCallback, useEffect, useState } from 'react';
 import { deleteTask, getTasks, updateTaskStatus } from '../services/api.js';
+import TaskEditModal from './TaskEditModal.jsx';
 
 const STATUS_OPTIONS = ['Pending', 'In Progress', 'Done'];
 
@@ -68,30 +69,31 @@ function StatusBadge({ status }) {
   );
 }
 
-function TasksTable({ onTaskDeleted }) {
+function TasksTable({ onTaskChanged }) {
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [updatingId, setUpdatingId] = useState(null);
   const [deletingId, setDeletingId] = useState(null);
+  const [editingTask, setEditingTask] = useState(null);
   const [rowError, setRowError] = useState({});
 
-  useEffect(() => {
-    const fetchTasks = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const data = await getTasks();
-        setTasks(data);
-      } catch (err) {
-        setError(err.message || 'Failed to load tasks.');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchTasks();
+  const fetchTasks = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await getTasks();
+      setTasks(data);
+    } catch (err) {
+      setError(err.message || 'Failed to load tasks.');
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    fetchTasks();
+  }, [fetchTasks]);
 
   const handleStatusChange = useCallback(
     async (taskId, newStatus) => {
@@ -112,6 +114,7 @@ function TasksTable({ onTaskDeleted }) {
             t.task_id === taskId ? { ...t, status: result.status } : t
           )
         );
+        onTaskChanged?.();
       } catch (err) {
         setRowError((prev) => ({
           ...prev,
@@ -121,7 +124,7 @@ function TasksTable({ onTaskDeleted }) {
         setUpdatingId(null);
       }
     },
-    [tasks]
+    [tasks, onTaskChanged]
   );
 
   const handleDelete = useCallback(
@@ -141,7 +144,7 @@ function TasksTable({ onTaskDeleted }) {
       try {
         await deleteTask(taskId);
         setTasks((prev) => prev.filter((t) => t.task_id !== taskId));
-        onTaskDeleted?.();
+        onTaskChanged?.();
       } catch (err) {
         setRowError((prev) => ({
           ...prev,
@@ -151,8 +154,13 @@ function TasksTable({ onTaskDeleted }) {
         setDeletingId(null);
       }
     },
-    [onTaskDeleted]
+    [onTaskChanged]
   );
+
+  const handleEditSaved = async () => {
+    await fetchTasks();
+    onTaskChanged?.();
+  };
 
   if (loading) {
     return <p>Loading tasks...</p>;
@@ -163,73 +171,94 @@ function TasksTable({ onTaskDeleted }) {
   }
 
   return (
-    <section style={{ maxWidth: '1100px', margin: '0 auto' }}>
-      <table style={tableStyle}>
-        <thead>
-          <tr>
-            <th style={thStyle}>Title</th>
-            <th style={thStyle}>Description</th>
-            <th style={thStyle}>Employee</th>
-            <th style={thStyle}>Department</th>
-            <th style={thStyle}>Status</th>
-            <th style={thStyle}>Due Date</th>
-            <th style={thStyle}>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {tasks.map((task) => {
-            const isDone = task.status === 'Done';
-            const isUpdating = updatingId === task.task_id;
-            const isDeleting = deletingId === task.task_id;
-            const isBusy = isUpdating || isDeleting;
+    <>
+      {editingTask && (
+        <TaskEditModal
+          task={editingTask}
+          onClose={() => setEditingTask(null)}
+          onSaved={handleEditSaved}
+        />
+      )}
 
-            return (
-              <tr key={task.task_id}>
-                <td style={tdStyle}>{task.title}</td>
-                <td style={tdStyle} className="task-description">
-                  {task.description?.trim() ? task.description : '—'}
-                </td>
-                <td style={tdStyle}>{task.employee_full_name}</td>
-                <td style={tdStyle}>{task.department_name}</td>
-                <td style={tdStyle}>
-                  <StatusBadge status={task.status} />
-                  <select
-                    style={selectStyle}
-                    value={task.status}
-                    disabled={isDone || isBusy}
-                    onChange={(e) =>
-                      handleStatusChange(task.task_id, e.target.value)
-                    }
-                    aria-label={`Status for ${task.title}`}
-                  >
-                    {getStatusOptionsForTask(task.status).map((option) => (
-                      <option key={option} value={option}>
-                        {option}
-                      </option>
-                    ))}
-                  </select>
-                  {rowError[task.task_id] && (
-                    <p className="status-error">{rowError[task.task_id]}</p>
-                  )}
-                </td>
-                <td style={tdStyle}>{formatDate(task.due_date)}</td>
-                <td style={tdStyle}>
-                  <button
-                    type="button"
-                    className="btn-danger"
-                    disabled={isBusy}
-                    onClick={() => handleDelete(task.task_id, task.title)}
-                    aria-label={`Delete ${task.title}`}
-                  >
-                    {isDeleting ? 'Deleting…' : 'Delete'}
-                  </button>
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
-    </section>
+      <section style={{ maxWidth: '1100px', margin: '0 auto' }}>
+        <table style={tableStyle}>
+          <thead>
+            <tr>
+              <th style={thStyle}>Title</th>
+              <th style={thStyle}>Description</th>
+              <th style={thStyle}>Employee</th>
+              <th style={thStyle}>Department</th>
+              <th style={thStyle}>Status</th>
+              <th style={thStyle}>Due Date</th>
+              <th style={thStyle}>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {tasks.map((task) => {
+              const isDone = task.status === 'Done';
+              const isUpdating = updatingId === task.task_id;
+              const isDeleting = deletingId === task.task_id;
+              const isBusy = isUpdating || isDeleting;
+
+              return (
+                <tr key={task.task_id}>
+                  <td style={tdStyle}>{task.title}</td>
+                  <td style={tdStyle} className="task-description">
+                    {task.description?.trim() ? task.description : '—'}
+                  </td>
+                  <td style={tdStyle}>{task.employee_full_name}</td>
+                  <td style={tdStyle}>{task.department_name}</td>
+                  <td style={tdStyle}>
+                    <StatusBadge status={task.status} />
+                    <select
+                      style={selectStyle}
+                      value={task.status}
+                      disabled={isDone || isBusy}
+                      onChange={(e) =>
+                        handleStatusChange(task.task_id, e.target.value)
+                      }
+                      aria-label={`Status for ${task.title}`}
+                    >
+                      {getStatusOptionsForTask(task.status).map((option) => (
+                        <option key={option} value={option}>
+                          {option}
+                        </option>
+                      ))}
+                    </select>
+                    {rowError[task.task_id] && (
+                      <p className="status-error">{rowError[task.task_id]}</p>
+                    )}
+                  </td>
+                  <td style={tdStyle}>{formatDate(task.due_date)}</td>
+                  <td style={tdStyle}>
+                    <div className="action-buttons">
+                      <button
+                        type="button"
+                        className="btn-secondary btn-sm"
+                        disabled={isBusy}
+                        onClick={() => setEditingTask(task)}
+                        aria-label={`Edit ${task.title}`}
+                      >
+                        Edit
+                      </button>
+                      <button
+                        type="button"
+                        className="btn-danger btn-sm"
+                        disabled={isBusy}
+                        onClick={() => handleDelete(task.task_id, task.title)}
+                        aria-label={`Delete ${task.title}`}
+                      >
+                        {isDeleting ? 'Deleting…' : 'Delete'}
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </section>
+    </>
   );
 }
 

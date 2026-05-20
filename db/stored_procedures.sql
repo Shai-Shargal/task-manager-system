@@ -34,6 +34,7 @@ BEGIN
             t.status,
             t.due_date,
             t.created_at,
+            t.assigned_to,
             e.full_name     AS employee_full_name,
             d.department_name
         FROM dbo.tasks AS t
@@ -430,6 +431,85 @@ BEGIN
 
         SELECT
             N'Task deleted successfully.' AS message,
+            @TaskID AS task_id;
+    END TRY
+    BEGIN CATCH
+        DECLARE @ErrorMessage NVARCHAR(4000) = ERROR_MESSAGE();
+        DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+        DECLARE @ErrorState INT = ERROR_STATE();
+
+        RAISERROR(@ErrorMessage, @ErrorSeverity, @ErrorState);
+    END CATCH
+END;
+GO
+
+/* ============================================================================
+   usp_UpdateTaskDetails
+   Updates task title, description, assignee, and due date only.
+   Status and created_at are not modified (use usp_UpdateTaskStatus for status).
+   Used by: PUT /tasks/:id (Express API)
+============================================================================ */
+CREATE OR ALTER PROCEDURE dbo.usp_UpdateTaskDetails
+    @TaskID       INT,
+    @Title        VARCHAR(200),
+    @Description  VARCHAR(MAX) = NULL,
+    @AssignedTo   INT,
+    @DueDate      DATETIME
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    BEGIN TRY
+        IF @Title IS NULL OR LTRIM(RTRIM(@Title)) = N''
+        BEGIN
+            RAISERROR(N'Title is required and cannot be empty.', 16, 1);
+            RETURN;
+        END;
+
+        IF @DueDate IS NULL
+        BEGIN
+            RAISERROR(N'Due date is required.', 16, 1);
+            RETURN;
+        END;
+
+        IF NOT EXISTS (
+            SELECT 1
+            FROM dbo.tasks AS t
+            WHERE t.task_id = @TaskID
+        )
+        BEGIN
+            RAISERROR(
+                N'Task not found. No task exists for the provided TaskID.',
+                16,
+                1
+            );
+            RETURN;
+        END;
+
+        IF NOT EXISTS (
+            SELECT 1
+            FROM dbo.employees AS e
+            WHERE e.employee_id = @AssignedTo
+        )
+        BEGIN
+            RAISERROR(
+                N'Employee not found. No employee exists for the provided AssignedTo value.',
+                16,
+                1
+            );
+            RETURN;
+        END;
+
+        UPDATE dbo.tasks
+        SET
+            title       = LTRIM(RTRIM(@Title)),
+            description = @Description,
+            assigned_to = @AssignedTo,
+            due_date    = @DueDate
+        WHERE task_id = @TaskID;
+
+        SELECT
+            N'Task updated successfully.' AS message,
             @TaskID AS task_id;
     END TRY
     BEGIN CATCH

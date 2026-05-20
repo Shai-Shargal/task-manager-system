@@ -12,6 +12,7 @@ Managers can view employee workload summaries and update task statuses through a
 - **Task management** — full task list with assignee and department context
 - **Create tasks** — assign new work from the dashboard (always starts as **Pending**)
 - **Delete tasks** — remove tasks from the tasks table with confirmation
+- **Edit tasks** — update title, description, assignee, and due date (status unchanged)
 - **Interactive status updates** — change task status from the UI with forward-only workflow validation
 - **MSSQL stored procedures** — all API database access goes through stored procedures (no inline SQL in the backend)
 - **Transactions and validation** — `TRY/CATCH`, meaningful `RAISERROR` messages, and transactional reassignment in `usp_AssignTask`
@@ -195,6 +196,7 @@ VITE_API_BASE_URL=http://localhost:5001
 | `GET` | `/employees` | `usp_GetEmployeeTaskSummary` | Employee task statistics |
 | `GET` | `/tasks` | `usp_GetAllTasks` | All tasks with employee and department |
 | `POST` | `/tasks` | `usp_CreateTask` | Create a task (status **Pending**) |
+| `PUT` | `/tasks/:id` | `usp_UpdateTaskDetails` | Update title, description, assignee, due date |
 | `PATCH` | `/tasks/:id/status` | `usp_UpdateTaskStatus` | Update task status (forward-only) |
 | `DELETE` | `/tasks/:id` | `usp_DeleteTask` | Permanently delete a task |
 
@@ -292,6 +294,7 @@ Backend tests live in `backend/tests/` and use **Jest** with **Supertest** again
 | `tasks.test.js` | `GET /tasks` — status, array shape, task fields |
 | `tasks.test.js` | `POST /tasks` — validation (400), invalid employee (500), successful create (201) |
 | `tasks.test.js` | `PATCH /tasks/:id/status` — valid and invalid transitions |
+| `tasks.test.js` | `PUT /tasks/:id` — validation, not found, successful update |
 | `tasks.test.js` | `DELETE /tasks/:id` — not found (404), successful delete (200) |
 
 `PATCH` tests create their own task via `POST` first, so they do not depend on seed data still having a **Pending** row.
@@ -340,6 +343,7 @@ ERD: [`docs/images/erd.png`](docs/images/erd.png)
 | `usp_GetAllTasks` | Task list with assignee and department |
 | `usp_GetOverdueTasks` | Tasks past due date and not completed |
 | `usp_CreateTask` | Insert new tasks with status **Pending** |
+| `usp_UpdateTaskDetails` | Update title, description, assignee, due date |
 | `usp_DeleteTask` | Permanently remove a task by ID |
 | `usp_UpdateTaskStatus` | Forward-only status transitions |
 | `usp_AssignTask` | Reassign open tasks with transaction safety |

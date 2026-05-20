@@ -119,9 +119,60 @@ async function deleteTask(req, res) {
   }
 }
 
+/**
+ * PUT /tasks/:id
+ * Executes usp_UpdateTaskDetails — does not change status or created_at.
+ */
+async function updateTaskDetails(req, res) {
+  try {
+    const taskId = parseInt(req.params.id, 10);
+    const { title, description, assignedTo, dueDate } = req.body;
+
+    if (Number.isNaN(taskId)) {
+      return res.status(400).json({ message: 'Task id must be a valid number.' });
+    }
+
+    if (!title || title.trim() === '') {
+      return res.status(400).json({ message: 'Title is required.' });
+    }
+
+    if (assignedTo === undefined || assignedTo === null || assignedTo === '') {
+      return res.status(400).json({ message: 'assignedTo is required.' });
+    }
+
+    if (!dueDate) {
+      return res.status(400).json({ message: 'dueDate is required.' });
+    }
+
+    const employeeId = parseInt(assignedTo, 10);
+    if (Number.isNaN(employeeId)) {
+      return res.status(400).json({ message: 'assignedTo must be a valid employee id.' });
+    }
+
+    const pool = await poolPromise;
+    const result = await pool
+      .request()
+      .input('TaskID', sql.Int, taskId)
+      .input('Title', sql.VarChar(200), title.trim())
+      .input('Description', sql.VarChar(sql.MAX), description || null)
+      .input('AssignedTo', sql.Int, employeeId)
+      .input('DueDate', sql.DateTime, new Date(dueDate))
+      .execute('usp_UpdateTaskDetails');
+
+    res.json(result.recordset[0]);
+  } catch (err) {
+    console.error('updateTaskDetails error:', err.message);
+    const notFound = /task not found/i.test(err.message || '');
+    res.status(notFound ? 404 : 500).json({
+      message: err.message || 'Failed to update task',
+    });
+  }
+}
+
 module.exports = {
   getAllTasks,
   updateTaskStatus,
   createTask,
   deleteTask,
+  updateTaskDetails,
 };

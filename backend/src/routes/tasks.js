@@ -8,6 +8,7 @@ const {
   updateTaskStatus,
   createTask,
   deleteTask,
+  updateTaskDetails,
 } = require('../controllers/tasks.controller');
 
 const router = express.Router();
@@ -20,6 +21,9 @@ router.post('/', createTask);
 
 /* PATCH /tasks/:id/status — update task status with transition rules */
 router.patch('/:id/status', updateTaskStatus);
+
+/* PUT /tasks/:id — update task details (not status) */
+router.put('/:id', updateTaskDetails);
 
 /* DELETE /tasks/:id — remove a task */
 router.delete('/:id', deleteTask);

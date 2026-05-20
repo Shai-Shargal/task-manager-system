@@ -65,4 +65,6 @@ Each task row (`GET /tasks`): `task_id`, `title`, `description`, `status`, `due_
 
 Status updates use `PATCH /tasks/:id/status` with body `{ "status": "Pending" | "In Progress" | "Done" }`. Forward-only transitions: Pending → In Progress → Done. Invalid transitions return `{ message: "Invalid status transition. ..." }` (shown inline in the tasks table).
 
+Edit uses `PUT /tasks/:id` from the **Edit** button (status is read-only in the modal; use the table dropdown for workflow).
+
 Delete uses `DELETE /tasks/:id` from the Actions column (with browser confirmation).

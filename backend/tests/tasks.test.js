@@ -145,6 +145,61 @@ describe('PATCH /tasks/:id/status', () => {
   });
 });
 
+describe('PUT /tasks/:id', () => {
+  it('should return 400 when title is missing', async () => {
+    const createRes = await request(app).post('/tasks').send(validTaskPayload);
+    const taskId = createRes.body.task_id;
+
+    const res = await request(app).put(`/tasks/${taskId}`).send({
+      assignedTo: 1,
+      dueDate: '2026-12-31',
+    });
+
+    expect(res.status).toBe(400);
+    expect(res.body.message).toMatch(/title/i);
+  });
+
+  it('should return 404 when task does not exist', async () => {
+    const res = await request(app).put('/tasks/999999').send({
+      title: 'Ghost task',
+      assignedTo: 1,
+      dueDate: '2026-12-31',
+    });
+
+    expect(res.status).toBe(404);
+    expect(res.body.message).toMatch(/task not found/i);
+  });
+
+  it('should return 200 and update task details', async () => {
+    const createRes = await request(app).post('/tasks').send({
+      title: 'Before edit',
+      description: 'Original',
+      assignedTo: 1,
+      dueDate: '2026-06-01',
+    });
+
+    const taskId = createRes.body.task_id;
+
+    const res = await request(app).put(`/tasks/${taskId}`).send({
+      title: 'After edit',
+      description: 'Updated description',
+      assignedTo: 1,
+      dueDate: '2026-07-15',
+    });
+
+    expect(res.status).toBe(200);
+    expect(res.body.message).toMatch(/updated successfully/i);
+    expect(res.body.task_id).toBe(taskId);
+
+    const listRes = await request(app).get('/tasks');
+    const updated = listRes.body.find((t) => t.task_id === taskId);
+
+    expect(updated.title).toBe('After edit');
+    expect(updated.description).toBe('Updated description');
+    expect(updated.status).toBe('Pending');
+  });
+});
+
 describe('DELETE /tasks/:id', () => {
   it('should return 404 when task does not exist', async () => {
     const res = await request(app).delete('/tasks/999999');

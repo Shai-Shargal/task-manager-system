@@ -80,6 +80,24 @@ export async function deleteTask(taskId) {
  * @param {string} status - Pending | In Progress | Done
  * @returns {Promise<{ message: string, task_id: number, status: string }>}
  */
+/**
+ * Updates task details via PUT /tasks/:id (does not change status).
+ * @param {number} taskId
+ * @param {{ title: string, description?: string, assignedTo: number, dueDate: string }} taskData
+ * @returns {Promise<{ message: string, task_id: number }>}
+ */
+export async function updateTask(taskId, taskData) {
+  try {
+    const response = await api.put(`/tasks/${taskId}`, taskData);
+    return response.data;
+  } catch (error) {
+    const message =
+      error.response?.data?.message || error.message || 'Failed to update task';
+    console.error('updateTask error:', message);
+    throw new Error(message);
+  }
+}
+
 export async function updateTaskStatus(taskId, status) {
   try {
     const response = await api.patch(`/tasks/${taskId}/status`, { status });

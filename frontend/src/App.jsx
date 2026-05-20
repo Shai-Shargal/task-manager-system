@@ -25,7 +25,7 @@ export default function App() {
           <CreateTaskForm onTaskCreated={refreshDashboard} />
           <TasksTable
             key={dashboardRefreshKey}
-            onTaskDeleted={refreshDashboard}
+            onTaskChanged={refreshDashboard}
           />
         </section>
       </main>
