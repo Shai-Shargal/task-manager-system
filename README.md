@@ -4,6 +4,12 @@ A full-stack **Employee Task Management System** built for the Deloitte Junior F
 
 Managers can view employee workload summaries and update task statuses through a clean web UI, while all data rules are enforced at the database layer.
 
+## Live demo
+
+**[https://task-manager-system-five.vercel.app](https://task-manager-system-five.vercel.app)** — interactive frontend-only deployment (in-memory mock data, no backend or database required). Refresh the page to reset state.
+
+For the full stack with MSSQL and Express, follow [Getting Started](#getting-started) below.
+
 ---
 
 ## Features
@@ -471,7 +477,7 @@ npm test
 ## Future Improvements
 
 - **Authentication** — role-based access for managers vs. employees
-- **Deployment** — containerized API and static frontend hosting
+- **Deployment** — containerized API hosting (frontend live demo on [Vercel](https://task-manager-system-five.vercel.app))
 - **Pagination** — large task lists and employee directories
 - **Filtering** — by department, status, overdue, or assignee
 - **Docker Compose** — single command to start MSSQL, API, and frontend
