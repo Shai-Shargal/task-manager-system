@@ -324,3 +324,77 @@ BEGIN
     END CATCH
 END;
 GO
+
+/* ============================================================================
+   usp_CreateTask
+   Inserts a new task assigned to an employee with status Pending.
+   Used by: POST /tasks (Express API)
+============================================================================ */
+CREATE OR ALTER PROCEDURE dbo.usp_CreateTask
+    @Title       VARCHAR(200),
+    @Description VARCHAR(MAX) = NULL,
+    @AssignedTo  INT,
+    @DueDate     DATETIME
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    BEGIN TRY
+        /* Validate required inputs */
+        IF @Title IS NULL OR LTRIM(RTRIM(@Title)) = N''
+        BEGIN
+            RAISERROR(N'Title is required and cannot be empty.', 16, 1);
+            RETURN;
+        END;
+
+        IF @DueDate IS NULL
+        BEGIN
+            RAISERROR(N'Due date is required.', 16, 1);
+            RETURN;
+        END;
+
+        /* Validate assignee exists */
+        IF NOT EXISTS (
+            SELECT 1
+            FROM dbo.employees AS e
+            WHERE e.employee_id = @AssignedTo
+        )
+        BEGIN
+            RAISERROR(
+                N'Employee not found. No employee exists for the provided AssignedTo value.',
+                16,
+                1
+            );
+            RETURN;
+        END;
+
+        INSERT INTO dbo.tasks (
+            title,
+            description,
+            assigned_to,
+            status,
+            due_date,
+            created_at
+        )
+        VALUES (
+            LTRIM(RTRIM(@Title)),
+            @Description,
+            @AssignedTo,
+            N'Pending',
+            @DueDate,
+            GETDATE()
+        );
+
+        SELECT
+            N'Task created successfully.' AS message,
+            CAST(SCOPE_IDENTITY() AS INT) AS task_id;
+    END TRY
+    BEGIN CATCH
+        DECLARE @ErrorMessage NVARCHAR(4000) = ERROR_MESSAGE();
+        DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+        DECLARE @ErrorState INT = ERROR_STATE();
+
+        RAISERROR(@ErrorMessage, @ErrorSeverity, @ErrorState);
+    END CATCH
+END;
+GO

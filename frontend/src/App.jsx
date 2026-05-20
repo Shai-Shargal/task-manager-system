@@ -1,7 +1,11 @@
+import { useState } from 'react';
+import CreateTaskForm from './components/CreateTaskForm.jsx';
 import EmployeeTable from './components/EmployeeTable.jsx';
 import TasksTable from './components/TasksTable.jsx';
 
 export default function App() {
+  const [taskRefreshKey, setTaskRefreshKey] = useState(0);
+
   return (
     <div className="app">
       <header className="app-header">
@@ -17,7 +21,8 @@ export default function App() {
         </section>
         <section className="dashboard-section">
           <h2 className="section-title">Tasks</h2>
-          <TasksTable />
+          <CreateTaskForm onTaskCreated={() => setTaskRefreshKey((k) => k + 1)} />
+          <TasksTable key={taskRefreshKey} />
         </section>
       </main>
     </div>

@@ -48,7 +48,51 @@ async function updateTaskStatus(req, res) {
   }
 }
 
+/**
+ * POST /tasks
+ * Executes usp_CreateTask — new tasks always start as Pending.
+ */
+async function createTask(req, res) {
+  try {
+    const { title, description, assignedTo, dueDate } = req.body;
+
+    if (!title || title.trim() === '') {
+      return res.status(400).json({ message: 'Title is required.' });
+    }
+
+    if (assignedTo === undefined || assignedTo === null || assignedTo === '') {
+      return res.status(400).json({ message: 'assignedTo is required.' });
+    }
+
+    if (!dueDate) {
+      return res.status(400).json({ message: 'dueDate is required.' });
+    }
+
+    const employeeId = parseInt(assignedTo, 10);
+    if (Number.isNaN(employeeId)) {
+      return res.status(400).json({ message: 'assignedTo must be a valid employee id.' });
+    }
+
+    const pool = await poolPromise;
+    const result = await pool
+      .request()
+      .input('Title', sql.VarChar(200), title.trim())
+      .input('Description', sql.VarChar(sql.MAX), description || null)
+      .input('AssignedTo', sql.Int, employeeId)
+      .input('DueDate', sql.DateTime, new Date(dueDate))
+      .execute('usp_CreateTask');
+
+    res.status(201).json(result.recordset[0]);
+  } catch (err) {
+    console.error('createTask error:', err.message);
+    res.status(500).json({
+      message: err.message || 'Failed to create task',
+    });
+  }
+}
+
 module.exports = {
   getAllTasks,
   updateTaskStatus,
+  createTask,
 };

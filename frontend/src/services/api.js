@@ -46,6 +46,23 @@ export async function getTasks() {
  * @param {string} status - Pending | In Progress | Done
  * @returns {Promise<{ message: string, task_id: number, status: string }>}
  */
+/**
+ * Creates a new task via POST /tasks (status defaults to Pending in the database).
+ * @param {{ title: string, description?: string, assignedTo: number, dueDate: string }} taskData
+ * @returns {Promise<{ message: string, task_id: number }>}
+ */
+export async function createTask(taskData) {
+  try {
+    const response = await api.post('/tasks', taskData);
+    return response.data;
+  } catch (error) {
+    const message =
+      error.response?.data?.message || error.message || 'Failed to create task';
+    console.error('createTask error:', message);
+    throw new Error(message);
+  }
+}
+
 export async function updateTaskStatus(taskId, status) {
   try {
     const response = await api.patch(`/tasks/${taskId}/status`, { status });
