@@ -36,6 +36,7 @@ BEGIN
             t.created_at,
             t.assigned_to,
             e.full_name     AS employee_full_name,
+            e.color_hex,
             d.department_name
         FROM dbo.tasks AS t
         INNER JOIN dbo.employees AS e
@@ -69,6 +70,7 @@ BEGIN
         SELECT
             e.employee_id,
             e.full_name AS employee_full_name,
+            e.color_hex,
             d.department_name,
             COUNT(t.task_id) AS total_tasks,
             SUM(CASE WHEN t.status = N'Pending' THEN 1 ELSE 0 END) AS pending_tasks,
@@ -89,6 +91,7 @@ BEGIN
         GROUP BY
             e.employee_id,
             e.full_name,
+            e.color_hex,
             d.department_name
         ORDER BY
             e.full_name;
@@ -511,6 +514,58 @@ BEGIN
         SELECT
             N'Task updated successfully.' AS message,
             @TaskID AS task_id;
+    END TRY
+    BEGIN CATCH
+        DECLARE @ErrorMessage NVARCHAR(4000) = ERROR_MESSAGE();
+        DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+        DECLARE @ErrorState INT = ERROR_STATE();
+
+        RAISERROR(@ErrorMessage, @ErrorSeverity, @ErrorState);
+    END CATCH
+END;
+GO
+
+/* ============================================================================
+   usp_UpdateEmployeeColor
+   Updates the dashboard color theme for an employee.
+   Used by: PATCH /employees/:id/color (Express API)
+============================================================================ */
+CREATE OR ALTER PROCEDURE dbo.usp_UpdateEmployeeColor
+    @EmployeeID INT,
+    @ColorHex   VARCHAR(20)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    BEGIN TRY
+        IF @ColorHex IS NULL OR LTRIM(RTRIM(@ColorHex)) = N''
+        BEGIN
+            RAISERROR(N'Color hex value is required.', 16, 1);
+            RETURN;
+        END;
+
+        IF NOT EXISTS (
+            SELECT 1
+            FROM dbo.employees AS e
+            WHERE e.employee_id = @EmployeeID
+        )
+        BEGIN
+            RAISERROR(
+                N'Employee not found. No employee exists for the provided EmployeeID.',
+                16,
+                1
+            );
+            RETURN;
+        END;
+
+        UPDATE dbo.employees
+        SET color_hex = LTRIM(RTRIM(@ColorHex))
+        WHERE employee_id = @EmployeeID;
+
+        SELECT
+            N'Employee color updated successfully.' AS message,
+            @EmployeeID AS employee_id,
+            LTRIM(RTRIM(@ColorHex)) AS color_hex;
     END TRY
     BEGIN CATCH
         DECLARE @ErrorMessage NVARCHAR(4000) = ERROR_MESSAGE();

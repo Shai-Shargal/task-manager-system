@@ -33,5 +33,45 @@ describe('GET /employees', () => {
     expect(row).toHaveProperty('pending_tasks');
     expect(row).toHaveProperty('in_progress_tasks');
     expect(row).toHaveProperty('done_tasks');
+    expect(row).toHaveProperty('color_hex');
+  });
+});
+
+describe('PATCH /employees/:id/color', () => {
+  it('should return 400 for invalid colorHex', async () => {
+    const res = await request(app)
+      .patch('/employees/1/color')
+      .send({ colorHex: 'not-a-color' });
+
+    expect(res.status).toBe(400);
+    expect(res.body.message).toMatch(/colorHex/i);
+  });
+
+  it('should return 404 when employee does not exist', async () => {
+    const res = await request(app)
+      .patch('/employees/999999/color')
+      .send({ colorHex: '#3B82F6' });
+
+    expect(res.status).toBe(404);
+    expect(res.body.message).toMatch(/employee not found/i);
+  });
+
+  it('should return 200 and persist new color', async () => {
+    const res = await request(app)
+      .patch('/employees/1/color')
+      .send({ colorHex: '#A855F7' });
+
+    expect(res.status).toBe(200);
+    expect(res.body.message).toMatch(/updated successfully/i);
+    expect(res.body.employee_id).toBe(1);
+    expect(res.body.color_hex).toBe('#A855F7');
+
+    const list = await request(app).get('/employees');
+    const alice = list.body.find((e) => e.employee_id === 1);
+    expect(alice.color_hex).toBe('#A855F7');
+
+    await request(app)
+      .patch('/employees/1/color')
+      .send({ colorHex: '#3B82F6' });
   });
 });

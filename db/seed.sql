@@ -66,14 +66,14 @@ GO
 SET IDENTITY_INSERT dbo.employees ON;
 GO
 
-INSERT INTO dbo.employees (employee_id, full_name, email, department_id, created_at)
+INSERT INTO dbo.employees (employee_id, full_name, email, department_id, color_hex, created_at)
 VALUES
-    (1, N'Alice Chen',      N'alice.chen@deloitte-demo.com',      1, N'2025-11-03 09:15:00'),
-    (2, N'Bob Martinez',    N'bob.martinez@deloitte-demo.com',    1, N'2025-11-10 10:30:00'),
-    (3, N'Carol Wu',        N'carol.wu@deloitte-demo.com',        1, N'2026-01-06 08:45:00'),
-    (4, N'Diana Foster',    N'diana.foster@deloitte-demo.com',    2, N'2025-10-21 11:00:00'),
-    (5, N'Ethan Brooks',    N'ethan.brooks@deloitte-demo.com',     2, N'2026-02-17 14:20:00'),
-    (6, N'Fiona Nguyen',    N'fiona.nguyen@deloitte-demo.com',     3, N'2025-12-01 09:00:00');
+    (1, N'Alice Chen',      N'alice.chen@deloitte-demo.com',      1, N'#3B82F6', N'2025-11-03 09:15:00'),
+    (2, N'Bob Martinez',    N'bob.martinez@deloitte-demo.com',    1, N'#10B981', N'2025-11-10 10:30:00'),
+    (3, N'Carol Wu',        N'carol.wu@deloitte-demo.com',        1, N'#8B5CF6', N'2026-01-06 08:45:00'),
+    (4, N'Diana Foster',    N'diana.foster@deloitte-demo.com',    2, N'#F59E0B', N'2025-10-21 11:00:00'),
+    (5, N'Ethan Brooks',    N'ethan.brooks@deloitte-demo.com',     2, N'#EF4444', N'2026-02-17 14:20:00'),
+    (6, N'Fiona Nguyen',    N'fiona.nguyen@deloitte-demo.com',     3, N'#EC4899', N'2025-12-01 09:00:00');
 GO
 
 SET IDENTITY_INSERT dbo.employees OFF;

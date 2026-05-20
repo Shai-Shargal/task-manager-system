@@ -13,6 +13,7 @@ Managers can view employee workload summaries and update task statuses through a
 - **Create tasks** — assign new work from the dashboard (always starts as **Pending**)
 - **Delete tasks** — remove tasks from the tasks table with confirmation
 - **Edit tasks** — update title, description, assignee, and due date (status unchanged)
+- **Employee color themes** — customizable per-employee colors across summaries and task rows
 - **Interactive status updates** — change task status from the UI with forward-only workflow validation
 - **MSSQL stored procedures** — all API database access goes through stored procedures (no inline SQL in the backend)
 - **Transactions and validation** — `TRY/CATCH`, meaningful `RAISERROR` messages, and transactional reassignment in `usp_AssignTask`
@@ -194,6 +195,7 @@ VITE_API_BASE_URL=http://localhost:5001
 |--------|----------|------------------|-------------|
 | `GET` | `/health` | — | API health check |
 | `GET` | `/employees` | `usp_GetEmployeeTaskSummary` | Employee task statistics |
+| `PATCH` | `/employees/:id/color` | `usp_UpdateEmployeeColor` | Update employee dashboard color |
 | `GET` | `/tasks` | `usp_GetAllTasks` | All tasks with employee and department |
 | `POST` | `/tasks` | `usp_CreateTask` | Create a task (status **Pending**) |
 | `PUT` | `/tasks/:id` | `usp_UpdateTaskDetails` | Update title, description, assignee, due date |
@@ -340,6 +342,7 @@ ERD: [`docs/images/erd.png`](docs/images/erd.png)
 | Procedure | Purpose |
 |-----------|---------|
 | `usp_GetEmployeeTaskSummary` | Aggregated per-employee task metrics |
+| `usp_UpdateEmployeeColor` | Persist employee `color_hex` for UI themes |
 | `usp_GetAllTasks` | Task list with assignee and department |
 | `usp_GetOverdueTasks` | Tasks past due date and not completed |
 | `usp_CreateTask` | Insert new tasks with status **Pending** |

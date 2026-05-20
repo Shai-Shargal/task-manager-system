@@ -40,6 +40,7 @@ describe('GET /tasks', () => {
     expect(row).toHaveProperty('due_date');
     expect(row).toHaveProperty('employee_full_name');
     expect(row).toHaveProperty('department_name');
+    expect(row).toHaveProperty('color_hex');
   });
 });
 

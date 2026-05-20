@@ -2,8 +2,10 @@
  * TasksTable — interactive task list with status updates, edit, and delete.
  */
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { deleteTask, getTasks, updateTaskStatus } from '../services/api.js';
+import { employeeTheme } from '../utils/employeeColor.js';
+import EmployeeColorLabel from './EmployeeColorLabel.jsx';
 import TaskEditModal from './TaskEditModal.jsx';
 
 const STATUS_OPTIONS = ['Pending', 'In Progress', 'Done'];
@@ -95,6 +97,20 @@ function TasksTable({ onTaskChanged }) {
     fetchTasks();
   }, [fetchTasks]);
 
+  const employeeLegend = useMemo(() => {
+    const byId = new Map();
+    tasks.forEach((task) => {
+      if (!byId.has(task.assigned_to)) {
+        byId.set(task.assigned_to, {
+          id: task.assigned_to,
+          name: task.employee_full_name,
+          color_hex: task.color_hex,
+        });
+      }
+    });
+    return [...byId.values()].sort((a, b) => a.name.localeCompare(b.name));
+  }, [tasks]);
+
   const handleStatusChange = useCallback(
     async (taskId, newStatus) => {
       const task = tasks.find((t) => t.task_id === taskId);
@@ -181,6 +197,19 @@ function TasksTable({ onTaskChanged }) {
       )}
 
       <section style={{ maxWidth: '1100px', margin: '0 auto' }}>
+        {employeeLegend.length > 0 && (
+          <div className="employee-legend" aria-label="Employee color legend">
+            <span className="employee-legend-title">Employees</span>
+            {employeeLegend.map((emp) => (
+              <EmployeeColorLabel
+                key={emp.id}
+                name={emp.name}
+                colorHex={emp.color_hex}
+              />
+            ))}
+          </div>
+        )}
+
         <table style={tableStyle}>
           <thead>
             <tr>
@@ -200,13 +229,24 @@ function TasksTable({ onTaskChanged }) {
               const isDeleting = deletingId === task.task_id;
               const isBusy = isUpdating || isDeleting;
 
+              const rowTheme = employeeTheme(task.color_hex);
+
               return (
-                <tr key={task.task_id}>
+                <tr
+                  key={task.task_id}
+                  className="task-row-accent"
+                  style={rowTheme.rowAccentStyle}
+                >
                   <td style={tdStyle}>{task.title}</td>
                   <td style={tdStyle} className="task-description">
                     {task.description?.trim() ? task.description : '—'}
                   </td>
-                  <td style={tdStyle}>{task.employee_full_name}</td>
+                  <td style={tdStyle}>
+                    <EmployeeColorLabel
+                      name={task.employee_full_name}
+                      colorHex={task.color_hex}
+                    />
+                  </td>
                   <td style={tdStyle}>{task.department_name}</td>
                   <td style={tdStyle}>
                     <StatusBadge status={task.status} />

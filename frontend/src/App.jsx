@@ -18,7 +18,10 @@ export default function App() {
       <main className="dashboard">
         <section className="dashboard-section">
           <h2 className="section-title">Employee Summary</h2>
-          <EmployeeTable key={dashboardRefreshKey} />
+          <EmployeeTable
+            key={dashboardRefreshKey}
+            onColorChanged={refreshDashboard}
+          />
         </section>
         <section className="dashboard-section">
           <h2 className="section-title">Tasks</h2>

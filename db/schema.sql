@@ -69,6 +69,7 @@ BEGIN
         full_name     VARCHAR(100)   NOT NULL,
         email         VARCHAR(255)   NOT NULL,
         department_id INT            NOT NULL,
+        color_hex     VARCHAR(20)    NOT NULL CONSTRAINT DF_employees_color_hex DEFAULT (N'#3B82F6'),
         created_at    DATETIME       NOT NULL CONSTRAINT DF_employees_created_at DEFAULT (GETDATE()),
 
         CONSTRAINT PK_employees PRIMARY KEY (employee_id),
@@ -77,6 +78,17 @@ BEGIN
             FOREIGN KEY (department_id)
             REFERENCES dbo.departments (department_id)
     );
+END
+GO
+
+/* ----------------------------------------------------------------------------
+   Migration: color_hex on employees (existing databases)
+---------------------------------------------------------------------------- */
+IF COL_LENGTH(N'dbo.employees', N'color_hex') IS NULL
+BEGIN
+    ALTER TABLE dbo.employees
+    ADD color_hex VARCHAR(20) NOT NULL
+        CONSTRAINT DF_employees_color_hex DEFAULT (N'#3B82F6');
 END
 GO
 

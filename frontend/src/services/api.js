@@ -12,6 +12,27 @@ const api = axios.create({
  * Fetches employee task summaries from the API.
  * @returns {Promise<Array>} Employee summary rows from GET /employees
  */
+/**
+ * Updates an employee color via PATCH /employees/:id/color.
+ * @param {number} employeeId
+ * @param {string} colorHex - e.g. #3B82F6
+ */
+export async function updateEmployeeColor(employeeId, colorHex) {
+  try {
+    const response = await api.patch(`/employees/${employeeId}/color`, {
+      colorHex,
+    });
+    return response.data;
+  } catch (error) {
+    const message =
+      error.response?.data?.message ||
+      error.message ||
+      'Failed to update employee color';
+    console.error('updateEmployeeColor error:', message);
+    throw new Error(message);
+  }
+}
+
 export async function getEmployees() {
   try {
     const response = await api.get('/employees');
