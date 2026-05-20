@@ -10,6 +10,7 @@ Managers can view employee workload summaries and update task statuses through a
 
 - **Employee summary dashboard** — per-employee task counts by status, department, and nearest upcoming due date
 - **Task management** — full task list with assignee and department context
+- **Create tasks** — assign new work from the dashboard (always starts as **Pending**)
 - **Interactive status updates** — change task status from the UI with forward-only workflow validation
 - **MSSQL stored procedures** — all API database access goes through stored procedures (no inline SQL in the backend)
 - **Transactions and validation** — `TRY/CATCH`, meaningful `RAISERROR` messages, and transactional reassignment in `usp_AssignTask`
@@ -192,6 +193,7 @@ VITE_API_BASE_URL=http://localhost:5001
 | `GET` | `/health` | — | API health check |
 | `GET` | `/employees` | `usp_GetEmployeeTaskSummary` | Employee task statistics |
 | `GET` | `/tasks` | `usp_GetAllTasks` | All tasks with employee and department |
+| `POST` | `/tasks` | `usp_CreateTask` | Create a task (status **Pending**) |
 | `PATCH` | `/tasks/:id/status` | `usp_UpdateTaskStatus` | Update task status (forward-only) |
 
 ### Example: update task status
@@ -217,6 +219,31 @@ Pending  →  In Progress  →  Done
 
 Invalid transitions return an error message (e.g. `Invalid status transition. In Progress can only move to Done.`).
 
+### Example: create task
+
+```http
+POST /tasks
+Content-Type: application/json
+```
+
+```json
+{
+  "title": "Prepare quarterly report",
+  "description": "Optional details for the assignee",
+  "assignedTo": 1,
+  "dueDate": "2026-06-30"
+}
+```
+
+Success (`201`):
+
+```json
+{
+  "message": "Task created successfully.",
+  "task_id": 1001
+}
+```
+
 ### Example responses
 
 **GET /employees** — array of summary rows:
@@ -240,6 +267,7 @@ Invalid transitions return an error message (e.g. `Invalid status transition. In
 {
   "task_id": 6,
   "title": "Review pull requests for payments microservice",
+  "description": "Complete code review for the v2 settlement API changes.",
   "status": "In Progress",
   "due_date": "2026-06-05T17:00:00.000Z",
   "employee_full_name": "Bob Martinez",
@@ -251,20 +279,38 @@ Invalid transitions return an error message (e.g. `Invalid status transition. In
 
 ## Testing
 
-Backend tests live in `backend/tests/` and use **Jest** with **Supertest** against the Express app (no separate server process).
+Backend tests live in `backend/tests/` and use **Jest** with **Supertest** against the Express app (no separate server process). They hit the real MSSQL database configured in `backend/.env`, so Docker must be running with schema, seed, and stored procedures applied.
+
+### What is covered
 
 | Suite | Coverage |
 |-------|----------|
-| `employees.test.js` | `GET /employees` — status 200, JSON array |
-| `tasks.test.js` | `GET /tasks`, `PATCH /tasks/:id/status` — valid and invalid transitions |
+| `health.test.js` | `GET /health` — liveness response |
+| `employees.test.js` | `GET /employees` — status, array shape, summary fields |
+| `tasks.test.js` | `GET /tasks` — status, array shape, task fields |
+| `tasks.test.js` | `POST /tasks` — validation (400), invalid employee (500), successful create (201) |
+| `tasks.test.js` | `PATCH /tasks/:id/status` — valid and invalid transitions |
 
-Run from `backend/`:
+`PATCH` tests create their own task via `POST` first, so they do not depend on seed data still having a **Pending** row.
+
+### Run tests
+
+From `backend/`:
 
 ```bash
 npm test
 ```
 
-Tests expect seed data to be loaded and at least one task in **Pending** status. If you changed statuses manually, re-run `db/seed.sql` or reset task statuses before testing.
+### Prerequisites
+
+- MSSQL container running
+- `backend/.env` pointing at the database
+- `usp_CreateTask` deployed (`db/stored_procedures.sql`)
+- At least one employee in seed data (e.g. `employee_id = 1`) for create/PATCH tests
+
+### Why add more tests?
+
+The original suite only checked HTTP status codes. The expanded tests also verify **request validation**, **response shapes**, **create-task workflow**, and **status transition rules** — the same behaviors the React dashboard relies on. That gives higher confidence before submission without needing frontend test tooling for this assignment scope.
 
 ---
 
@@ -290,6 +336,7 @@ ERD: [`docs/images/erd.png`](docs/images/erd.png)
 | `usp_GetEmployeeTaskSummary` | Aggregated per-employee task metrics |
 | `usp_GetAllTasks` | Task list with assignee and department |
 | `usp_GetOverdueTasks` | Tasks past due date and not completed |
+| `usp_CreateTask` | Insert new tasks with status **Pending** |
 | `usp_UpdateTaskStatus` | Forward-only status transitions |
 | `usp_AssignTask` | Reassign open tasks with transaction safety |
 
