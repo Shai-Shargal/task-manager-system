@@ -391,6 +391,83 @@ Task list with employee color legend, status workflow, edit, and delete.
 
 ---
 
+## Troubleshooting
+
+### API routes return HTML instead of JSON
+
+If the browser or `curl` shows HTML errors such as `Cannot GET /tasks` or `Cannot PATCH /employees/1/color`, an **old backend process** is often still listening on port **5001** (started before newer routes were added). That process returns Express HTML error pages, not JSON.
+
+Check which process is using the port:
+
+```bash
+lsof -i :5001
+```
+
+Stop the old process (replace `<PID>` with the value from the `node` line):
+
+```bash
+kill -9 <PID>
+```
+
+Start the API again from `backend/` and leave the terminal open:
+
+```bash
+cd backend
+npm start
+```
+
+Confirm with:
+
+```bash
+curl http://localhost:5001/health
+```
+
+You should receive `{"status":"ok"}`.
+
+### Database schema errors after pulling latest changes
+
+Your local database may be **outdated** if new columns or stored procedures were added (for example `color_hex` or `usp_UpdateEmployeeColor`). Re-run the SQL scripts **in order** from the project root:
+
+```bash
+docker exec -i task-manager-mssql /opt/mssql-tools/bin/sqlcmd \
+  -S localhost -U sa -P 'YourStrongPassword123!' -C < db/schema.sql
+
+docker exec -i task-manager-mssql /opt/mssql-tools/bin/sqlcmd \
+  -S localhost -U sa -P 'YourStrongPassword123!' -C < db/seed.sql
+
+docker exec -i task-manager-mssql /opt/mssql-tools/bin/sqlcmd \
+  -S localhost -U sa -P 'YourStrongPassword123!' -C < db/stored_procedures.sql
+```
+
+Scripts:
+
+- [`db/schema.sql`](db/schema.sql) — tables, constraints, migrations
+- [`db/seed.sql`](db/seed.sql) — sample data
+- [`db/stored_procedures.sql`](db/stored_procedures.sql) — stored procedures
+
+### Tests failing unexpectedly
+
+Integration tests use the **real database** configured in `backend/.env`. Failures often mean seed data no longer matches what tests expect (for example no **Pending** task left after manual status changes in the UI).
+
+Reset data by re-running the seed script:
+
+```bash
+docker exec -i task-manager-mssql /opt/mssql-tools/bin/sqlcmd \
+  -S localhost -U sa -P 'YourStrongPassword123!' -C < db/seed.sql
+```
+
+Then redeploy procedures if needed and run tests:
+
+```bash
+docker exec -i task-manager-mssql /opt/mssql-tools/bin/sqlcmd \
+  -S localhost -U sa -P 'YourStrongPassword123!' -C < db/stored_procedures.sql
+
+cd backend
+npm test
+```
+
+---
+
 ## Future Improvements
 
 - **Authentication** — role-based access for managers vs. employees
