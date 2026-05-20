@@ -91,8 +91,37 @@ async function createTask(req, res) {
   }
 }
 
+/**
+ * DELETE /tasks/:id
+ * Executes usp_DeleteTask — permanently removes a task.
+ */
+async function deleteTask(req, res) {
+  try {
+    const taskId = parseInt(req.params.id, 10);
+
+    if (Number.isNaN(taskId)) {
+      return res.status(400).json({ message: 'Task id must be a valid number.' });
+    }
+
+    const pool = await poolPromise;
+    const result = await pool
+      .request()
+      .input('TaskID', sql.Int, taskId)
+      .execute('usp_DeleteTask');
+
+    res.json(result.recordset[0]);
+  } catch (err) {
+    console.error('deleteTask error:', err.message);
+    const notFound = /task not found/i.test(err.message || '');
+    res.status(notFound ? 404 : 500).json({
+      message: err.message || 'Failed to delete task',
+    });
+  }
+}
+
 module.exports = {
   getAllTasks,
   updateTaskStatus,
   createTask,
+  deleteTask,
 };

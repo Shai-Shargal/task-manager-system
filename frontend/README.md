@@ -64,3 +64,5 @@ Each employee row: `employee_full_name`, `department_name`, `total_tasks`, `pend
 Each task row (`GET /tasks`): `task_id`, `title`, `description`, `status`, `due_date`, `employee_full_name`, `department_name`.
 
 Status updates use `PATCH /tasks/:id/status` with body `{ "status": "Pending" | "In Progress" | "Done" }`. Forward-only transitions: Pending → In Progress → Done. Invalid transitions return `{ message: "Invalid status transition. ..." }` (shown inline in the tasks table).
+
+Delete uses `DELETE /tasks/:id` from the Actions column (with browser confirmation).

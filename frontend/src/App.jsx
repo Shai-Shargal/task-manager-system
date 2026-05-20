@@ -4,7 +4,8 @@ import EmployeeTable from './components/EmployeeTable.jsx';
 import TasksTable from './components/TasksTable.jsx';
 
 export default function App() {
-  const [taskRefreshKey, setTaskRefreshKey] = useState(0);
+  const [dashboardRefreshKey, setDashboardRefreshKey] = useState(0);
+  const refreshDashboard = () => setDashboardRefreshKey((k) => k + 1);
 
   return (
     <div className="app">
@@ -17,12 +18,15 @@ export default function App() {
       <main className="dashboard">
         <section className="dashboard-section">
           <h2 className="section-title">Employee Summary</h2>
-          <EmployeeTable />
+          <EmployeeTable key={dashboardRefreshKey} />
         </section>
         <section className="dashboard-section">
           <h2 className="section-title">Tasks</h2>
-          <CreateTaskForm onTaskCreated={() => setTaskRefreshKey((k) => k + 1)} />
-          <TasksTable key={taskRefreshKey} />
+          <CreateTaskForm onTaskCreated={refreshDashboard} />
+          <TasksTable
+            key={dashboardRefreshKey}
+            onTaskDeleted={refreshDashboard}
+          />
         </section>
       </main>
     </div>

@@ -11,6 +11,7 @@ Managers can view employee workload summaries and update task statuses through a
 - **Employee summary dashboard** — per-employee task counts by status, department, and nearest upcoming due date
 - **Task management** — full task list with assignee and department context
 - **Create tasks** — assign new work from the dashboard (always starts as **Pending**)
+- **Delete tasks** — remove tasks from the tasks table with confirmation
 - **Interactive status updates** — change task status from the UI with forward-only workflow validation
 - **MSSQL stored procedures** — all API database access goes through stored procedures (no inline SQL in the backend)
 - **Transactions and validation** — `TRY/CATCH`, meaningful `RAISERROR` messages, and transactional reassignment in `usp_AssignTask`
@@ -195,6 +196,7 @@ VITE_API_BASE_URL=http://localhost:5001
 | `GET` | `/tasks` | `usp_GetAllTasks` | All tasks with employee and department |
 | `POST` | `/tasks` | `usp_CreateTask` | Create a task (status **Pending**) |
 | `PATCH` | `/tasks/:id/status` | `usp_UpdateTaskStatus` | Update task status (forward-only) |
+| `DELETE` | `/tasks/:id` | `usp_DeleteTask` | Permanently delete a task |
 
 ### Example: update task status
 
@@ -290,6 +292,7 @@ Backend tests live in `backend/tests/` and use **Jest** with **Supertest** again
 | `tasks.test.js` | `GET /tasks` — status, array shape, task fields |
 | `tasks.test.js` | `POST /tasks` — validation (400), invalid employee (500), successful create (201) |
 | `tasks.test.js` | `PATCH /tasks/:id/status` — valid and invalid transitions |
+| `tasks.test.js` | `DELETE /tasks/:id` — not found (404), successful delete (200) |
 
 `PATCH` tests create their own task via `POST` first, so they do not depend on seed data still having a **Pending** row.
 
@@ -305,7 +308,7 @@ npm test
 
 - MSSQL container running
 - `backend/.env` pointing at the database
-- `usp_CreateTask` deployed (`db/stored_procedures.sql`)
+- Stored procedures deployed (`db/stored_procedures.sql`), including `usp_CreateTask` and `usp_DeleteTask`
 - At least one employee in seed data (e.g. `employee_id = 1`) for create/PATCH tests
 
 ### Why add more tests?
@@ -337,6 +340,7 @@ ERD: [`docs/images/erd.png`](docs/images/erd.png)
 | `usp_GetAllTasks` | Task list with assignee and department |
 | `usp_GetOverdueTasks` | Tasks past due date and not completed |
 | `usp_CreateTask` | Insert new tasks with status **Pending** |
+| `usp_DeleteTask` | Permanently remove a task by ID |
 | `usp_UpdateTaskStatus` | Forward-only status transitions |
 | `usp_AssignTask` | Reassign open tasks with transaction safety |
 

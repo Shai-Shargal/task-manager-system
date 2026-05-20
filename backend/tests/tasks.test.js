@@ -144,3 +144,33 @@ describe('PATCH /tasks/:id/status', () => {
     expect(res.body.status).toBe('In Progress');
   });
 });
+
+describe('DELETE /tasks/:id', () => {
+  it('should return 404 when task does not exist', async () => {
+    const res = await request(app).delete('/tasks/999999');
+
+    expect(res.status).toBe(404);
+    expect(res.body.message).toMatch(/task not found/i);
+  });
+
+  it('should return 200 and remove the task', async () => {
+    const createRes = await request(app).post('/tasks').send({
+      title: `Delete test task ${Date.now()}`,
+      assignedTo: 1,
+      dueDate: '2026-12-31',
+    });
+
+    expect(createRes.status).toBe(201);
+    const taskId = createRes.body.task_id;
+
+    const deleteRes = await request(app).delete(`/tasks/${taskId}`);
+
+    expect(deleteRes.status).toBe(200);
+    expect(deleteRes.body.message).toMatch(/deleted successfully/i);
+    expect(deleteRes.body.task_id).toBe(taskId);
+
+    const listRes = await request(app).get('/tasks');
+    const found = listRes.body.find((t) => t.task_id === taskId);
+    expect(found).toBeUndefined();
+  });
+});

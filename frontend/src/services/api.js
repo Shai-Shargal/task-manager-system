@@ -41,12 +41,6 @@ export async function getTasks() {
 }
 
 /**
- * Updates a task status via PATCH /tasks/:id/status.
- * @param {number} taskId
- * @param {string} status - Pending | In Progress | Done
- * @returns {Promise<{ message: string, task_id: number, status: string }>}
- */
-/**
  * Creates a new task via POST /tasks (status defaults to Pending in the database).
  * @param {{ title: string, description?: string, assignedTo: number, dueDate: string }} taskData
  * @returns {Promise<{ message: string, task_id: number }>}
@@ -63,6 +57,29 @@ export async function createTask(taskData) {
   }
 }
 
+/**
+ * Deletes a task via DELETE /tasks/:id.
+ * @param {number} taskId
+ * @returns {Promise<{ message: string, task_id: number }>}
+ */
+export async function deleteTask(taskId) {
+  try {
+    const response = await api.delete(`/tasks/${taskId}`);
+    return response.data;
+  } catch (error) {
+    const message =
+      error.response?.data?.message || error.message || 'Failed to delete task';
+    console.error('deleteTask error:', message);
+    throw new Error(message);
+  }
+}
+
+/**
+ * Updates a task status via PATCH /tasks/:id/status.
+ * @param {number} taskId
+ * @param {string} status - Pending | In Progress | Done
+ * @returns {Promise<{ message: string, task_id: number, status: string }>}
+ */
 export async function updateTaskStatus(taskId, status) {
   try {
     const response = await api.patch(`/tasks/${taskId}/status`, { status });

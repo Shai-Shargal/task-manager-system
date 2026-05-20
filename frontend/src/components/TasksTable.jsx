@@ -3,7 +3,7 @@
  */
 
 import { useCallback, useEffect, useState } from 'react';
-import { getTasks, updateTaskStatus } from '../services/api.js';
+import { deleteTask, getTasks, updateTaskStatus } from '../services/api.js';
 
 const STATUS_OPTIONS = ['Pending', 'In Progress', 'Done'];
 
@@ -68,11 +68,12 @@ function StatusBadge({ status }) {
   );
 }
 
-function TasksTable() {
+function TasksTable({ onTaskDeleted }) {
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [updatingId, setUpdatingId] = useState(null);
+  const [deletingId, setDeletingId] = useState(null);
   const [rowError, setRowError] = useState({});
 
   useEffect(() => {
@@ -123,6 +124,36 @@ function TasksTable() {
     [tasks]
   );
 
+  const handleDelete = useCallback(
+    async (taskId, title) => {
+      const confirmed = window.confirm(
+        `Delete task "${title}"? This cannot be undone.`
+      );
+      if (!confirmed) return;
+
+      setRowError((prev) => {
+        const next = { ...prev };
+        delete next[taskId];
+        return next;
+      });
+
+      setDeletingId(taskId);
+      try {
+        await deleteTask(taskId);
+        setTasks((prev) => prev.filter((t) => t.task_id !== taskId));
+        onTaskDeleted?.();
+      } catch (err) {
+        setRowError((prev) => ({
+          ...prev,
+          [taskId]: err.message || 'Failed to delete task.',
+        }));
+      } finally {
+        setDeletingId(null);
+      }
+    },
+    [onTaskDeleted]
+  );
+
   if (loading) {
     return <p>Loading tasks...</p>;
   }
@@ -142,12 +173,15 @@ function TasksTable() {
             <th style={thStyle}>Department</th>
             <th style={thStyle}>Status</th>
             <th style={thStyle}>Due Date</th>
+            <th style={thStyle}>Actions</th>
           </tr>
         </thead>
         <tbody>
           {tasks.map((task) => {
             const isDone = task.status === 'Done';
             const isUpdating = updatingId === task.task_id;
+            const isDeleting = deletingId === task.task_id;
+            const isBusy = isUpdating || isDeleting;
 
             return (
               <tr key={task.task_id}>
@@ -162,7 +196,7 @@ function TasksTable() {
                   <select
                     style={selectStyle}
                     value={task.status}
-                    disabled={isDone || isUpdating}
+                    disabled={isDone || isBusy}
                     onChange={(e) =>
                       handleStatusChange(task.task_id, e.target.value)
                     }
@@ -179,6 +213,17 @@ function TasksTable() {
                   )}
                 </td>
                 <td style={tdStyle}>{formatDate(task.due_date)}</td>
+                <td style={tdStyle}>
+                  <button
+                    type="button"
+                    className="btn-danger"
+                    disabled={isBusy}
+                    onClick={() => handleDelete(task.task_id, task.title)}
+                    aria-label={`Delete ${task.title}`}
+                  >
+                    {isDeleting ? 'Deleting…' : 'Delete'}
+                  </button>
+                </td>
               </tr>
             );
           })}
