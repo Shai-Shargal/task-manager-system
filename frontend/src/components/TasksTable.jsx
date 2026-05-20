@@ -137,6 +137,7 @@ function TasksTable() {
         <thead>
           <tr>
             <th style={thStyle}>Title</th>
+            <th style={thStyle}>Description</th>
             <th style={thStyle}>Employee</th>
             <th style={thStyle}>Department</th>
             <th style={thStyle}>Status</th>
@@ -151,6 +152,9 @@ function TasksTable() {
             return (
               <tr key={task.task_id}>
                 <td style={tdStyle}>{task.title}</td>
+                <td style={tdStyle} className="task-description">
+                  {task.description?.trim() ? task.description : '—'}
+                </td>
                 <td style={tdStyle}>{task.employee_full_name}</td>
                 <td style={tdStyle}>{task.department_name}</td>
                 <td style={tdStyle}>

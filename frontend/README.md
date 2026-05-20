@@ -61,6 +61,6 @@ Override with `VITE_API_BASE_URL` in `frontend/.env` (see `.env.example`). Match
 
 Each employee row: `employee_full_name`, `department_name`, `total_tasks`, `pending_tasks`, `in_progress_tasks`, `done_tasks`, `nearest_upcoming_due_date`.
 
-Each task row (`GET /tasks`): `task_id`, `title`, `status`, `due_date`, `employee_full_name`, `department_name`.
+Each task row (`GET /tasks`): `task_id`, `title`, `description`, `status`, `due_date`, `employee_full_name`, `department_name`.
 
 Status updates use `PATCH /tasks/:id/status` with body `{ "status": "Pending" | "In Progress" | "Done" }`. Forward-only transitions: Pending → In Progress → Done. Invalid transitions return `{ message: "Invalid status transition. ..." }` (shown inline in the tasks table).

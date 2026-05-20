@@ -176,3 +176,10 @@ body {
   opacity: 0.6;
   cursor: not-allowed;
 }
+
+.task-description {
+  max-width: 280px;
+  font-size: 0.875rem;
+  color: #4b5563;
+  word-break: break-word;
+}
