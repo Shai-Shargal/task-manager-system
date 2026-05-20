@@ -53,7 +53,9 @@ export async function updateTaskStatus(taskId, status) {
   } catch (error) {
     const message =
       error.response?.data?.message || error.message || 'Failed to update task status';
-    console.error('updateTaskStatus error:', message);
+    if (!message.includes('Invalid status transition')) {
+      console.error('updateTaskStatus error:', message);
+    }
     throw new Error(message);
   }
 }

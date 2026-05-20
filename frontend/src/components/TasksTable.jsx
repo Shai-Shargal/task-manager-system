@@ -7,6 +7,20 @@ import { getTasks, updateTaskStatus } from '../services/api.js';
 
 const STATUS_OPTIONS = ['Pending', 'In Progress', 'Done'];
 
+/** Allowed dropdown values per workflow: Pending → In Progress → Done */
+function getStatusOptionsForTask(currentStatus) {
+  switch (currentStatus) {
+    case 'Pending':
+      return ['Pending', 'In Progress'];
+    case 'In Progress':
+      return ['In Progress', 'Done'];
+    case 'Done':
+      return ['Done'];
+    default:
+      return STATUS_OPTIONS;
+  }
+}
+
 const STATUS_BADGE_STYLES = {
   Pending: { backgroundColor: '#fef3c7', color: '#92400e' },
   'In Progress': { backgroundColor: '#dbeafe', color: '#1e40af' },
@@ -150,7 +164,7 @@ function TasksTable() {
                     }
                     aria-label={`Status for ${task.title}`}
                   >
-                    {STATUS_OPTIONS.map((option) => (
+                    {getStatusOptionsForTask(task.status).map((option) => (
                       <option key={option} value={option}>
                         {option}
                       </option>
