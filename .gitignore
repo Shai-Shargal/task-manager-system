@@ -1,2 +1,25 @@
-node_modules
+# Dependencies
+node_modules/
+
+# Environment and secrets
 .env
+.env.local
+.env.*.local
+
+# Build output
+dist/
+frontend/dist/
+
+# OS and editor
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+.vscode/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Test / coverage
+coverage/

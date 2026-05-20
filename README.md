@@ -52,6 +52,7 @@ React (Vite)  →  Express API  →  Stored Procedures  →  MSSQL (Docker)
 ```txt
 Task_Manager_System/
 ├── backend/
+│   ├── .env.example
 │   ├── src/
 │   │   ├── app.js                 # Express app (routes, middleware)
 │   │   ├── server.js              # HTTP entry point
@@ -142,16 +143,13 @@ docker exec -i task-manager-mssql /opt/mssql-tools/bin/sqlcmd \
 
 ### D. Backend setup
 
-Create `backend/.env`:
+Copy the environment template and adjust if needed:
 
-```env
-PORT=5001
-DB_USER=sa
-DB_PASSWORD=YourStrongPassword123!
-DB_SERVER=localhost
-DB_PORT=1433
-DB_NAME=TaskManagerDB
+```bash
+cp backend/.env.example backend/.env
 ```
+
+`backend/.env.example` defines `PORT`, `DB_USER`, `DB_PASSWORD`, `DB_SERVER`, `DB_PORT`, and `DB_NAME` (defaults match the Docker setup above).
 
 Install and run:
 
@@ -314,7 +312,7 @@ npm test
 ### Prerequisites
 
 - MSSQL container running
-- `backend/.env` pointing at the database
+- `backend/.env` (from `backend/.env.example`) pointing at the database
 - Stored procedures deployed (`db/stored_procedures.sql`), including `usp_CreateTask` and `usp_DeleteTask`
 - At least one employee in seed data (e.g. `employee_id = 1`) for create/PATCH tests
 
