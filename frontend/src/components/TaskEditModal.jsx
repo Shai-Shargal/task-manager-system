@@ -3,7 +3,7 @@
  */
 
 import { useEffect, useState } from 'react';
-import { getEmployees, updateTask } from '../services/api.js';
+import { getEmployees, updateTask } from '../services/index.js';
 
 function toDateInputValue(value) {
   if (!value) return '';

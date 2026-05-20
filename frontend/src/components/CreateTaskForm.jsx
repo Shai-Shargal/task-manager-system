@@ -3,7 +3,7 @@
  */
 
 import { useEffect, useState } from 'react';
-import { createTask, getEmployees } from '../services/api.js';
+import { createTask, getEmployees } from '../services/index.js';
 
 const initialForm = {
   title: '',

@@ -3,7 +3,7 @@
  */
 
 import { useCallback, useEffect, useState } from 'react';
-import { getEmployees, updateEmployeeColor } from '../services/api.js';
+import { getEmployees, updateEmployeeColor } from '../services/index.js';
 import { normalizeColor } from '../utils/employeeColor.js';
 import EmployeeColorLabel from './EmployeeColorLabel.jsx';
 

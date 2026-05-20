@@ -9,10 +9,6 @@ const api = axios.create({
 });
 
 /**
- * Fetches employee task summaries from the API.
- * @returns {Promise<Array>} Employee summary rows from GET /employees
- */
-/**
  * Updates an employee color via PATCH /employees/:id/color.
  * @param {number} employeeId
  * @param {string} colorHex - e.g. #3B82F6

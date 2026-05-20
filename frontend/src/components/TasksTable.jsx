@@ -3,7 +3,7 @@
  */
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { deleteTask, getTasks, updateTaskStatus } from '../services/api.js';
+import { deleteTask, getTasks, updateTaskStatus } from '../services/index.js';
 import { employeeTheme } from '../utils/employeeColor.js';
 import EmployeeColorLabel from './EmployeeColorLabel.jsx';
 import TaskEditModal from './TaskEditModal.jsx';
