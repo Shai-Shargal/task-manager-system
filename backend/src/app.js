@@ -1,5 +1,6 @@
 /**
- * Employee Task Manager API — Express application entry point.
+ * Employee Task Manager API — Express application setup.
+ * Export app for Supertest; use server.js to start the HTTP listener.
  */
 
 const path = require('path');
@@ -18,7 +19,6 @@ const employeeRoutes = require('./routes/employees');
 const taskRoutes = require('./routes/tasks');
 
 const app = express();
-const PORT = process.env.PORT || 5000;
 
 /* Middleware */
 app.use(cors());
@@ -33,7 +33,4 @@ app.get('/health', (req, res) => {
 app.use('/employees', employeeRoutes);
 app.use('/tasks', taskRoutes);
 
-/* Start server */
-app.listen(PORT, () => {
-  console.log(`Employee Task Manager API listening on port ${PORT}`);
-});
+module.exports = app;
